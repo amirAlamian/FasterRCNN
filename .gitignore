@@ -1,0 +1,4 @@
+.vscode
+dataset/*
+results/best_model.pth
+src/__pycache__/*
