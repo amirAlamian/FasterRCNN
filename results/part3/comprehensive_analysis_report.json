@@ -1,0 +1,67 @@
+{
+  "baseline": {
+    "architecture": {
+      "total_params": 11343568,
+      "trainable_params": 11343568,
+      "size_mb": 43.27227783203125
+    },
+    "performance": {
+      "avg_similarity": 0.8683288100788101,
+      "exact_match_rate": 0.46,
+      "worst_predictions": [
+        {
+          "true_expr": "(6+4)*(9+(5-2))",
+          "pred_expr": "3",
+          "similarity": 0.0
+        },
+        {
+          "true_expr": "10+((8-4)*5)",
+          "pred_expr": "-",
+          "similarity": 0.08333333333333337
+        },
+        {
+          "true_expr": "(15-5)*2",
+          "pred_expr": "1+1",
+          "similarity": 0.125
+        },
+        {
+          "true_expr": "(12-4)+(7/3)",
+          "pred_expr": "1+1",
+          "similarity": 0.16666666666666663
+        },
+        {
+          "true_expr": "2*2*3",
+          "pred_expr": "3",
+          "similarity": 0.19999999999999996
+        }
+      ],
+      "best_predictions": [
+        {
+          "true_expr": "45-15/3",
+          "pred_expr": "45-15/3",
+          "similarity": 1.0
+        },
+        {
+          "true_expr": "25+7+3",
+          "pred_expr": "25+7+3",
+          "similarity": 1.0
+        },
+        {
+          "true_expr": "(13+7)*((5+2)-4)",
+          "pred_expr": "(13+7)*((5+2)-4)",
+          "similarity": 1.0
+        },
+        {
+          "true_expr": "-21/(7-4)+9",
+          "pred_expr": "-21/(7-4)+9",
+          "similarity": 1.0
+        },
+        {
+          "true_expr": "36/9+8*4",
+          "pred_expr": "36/9+8*4",
+          "similarity": 1.0
+        }
+      ]
+    }
+  }
+}
