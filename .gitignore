@@ -1,4 +1,5 @@
 .vscode
 dataset/*
 results/best_model.pth
+results/predictions2.csv
 src/__pycache__/*

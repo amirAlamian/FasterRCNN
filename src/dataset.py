@@ -87,7 +87,7 @@ class ConvertToOriginalSize:
 
         image = TF.resize(
             image, (org_height, org_width), interpolation=TF.InterpolationMode.BILINEAR
-        )
+            )
 
         if "boxes" in target and len(target["boxes"]) > 0:
             boxes = target["boxes"].clone()
@@ -243,7 +243,7 @@ class ExpressionDataset(Dataset):
         img = Image.open(img_path).convert("RGB")
         boxes = []
         labels = []
-        image_id = torch.tensor([idx + self.offset])
+        image_id = int(img_name.replace(".png", ""))
         area = 0
         iscrowd = []
         if os.path.exists(ann_path):
