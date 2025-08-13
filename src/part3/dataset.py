@@ -1,4 +1,4 @@
-# dataset.py
+
 
 import torch
 from torch.utils.data import Dataset
@@ -24,7 +24,7 @@ class ResNetCharacterDataset(Dataset):
     
     def __getitem__(self, idx):
         sample = self.samples[idx]
-        # Ensure image is a tensor
+        
         image = sample['image']
         if not isinstance(image, torch.Tensor):
             image = torch.from_numpy(image.copy())
@@ -59,7 +59,7 @@ class AugmentedResNetDataset(Dataset):
         img = image_tensor.numpy().transpose(1, 2, 0).astype(np.float32)
         H, W, C = img.shape
 
-        # 1. Random Affine Transformation (Rotate, Scale, Shear, Translate)
+        
         if random.random() < 0.75:
             angle = random.uniform(-12, 12)
             scale = random.uniform(0.9, 1.1)
@@ -73,28 +73,28 @@ class AugmentedResNetDataset(Dataset):
             
             img = cv2.warpAffine(img, M, (W, H), borderMode=cv2.BORDER_REFLECT_101)
 
-        # 2. Brightness and Contrast Jitter
+        
         if random.random() < 0.5:
-            alpha = random.uniform(0.8, 1.2) # Contrast
-            beta = random.uniform(-0.1, 0.1)  # Brightness
+            alpha = random.uniform(0.8, 1.2) 
+            beta = random.uniform(-0.1, 0.1)  
             img = np.clip(alpha * img + beta, -3.0, 3.0)
 
-        # 3. Gaussian Noise
+        
         if random.random() < 0.4:
             noise = np.random.normal(0, random.uniform(0, 0.05), img.shape).astype(np.float32)
             img += noise
 
-        # 4. Gaussian Blur
+        
         if random.random() < 0.3:
             ksize = random.choice([3, 5])
             img = cv2.GaussianBlur(img, (ksize, ksize), 0)
 
-        # 5. Random Erasing (Cutout)
+        
         if random.random() < 0.5:
             erase_h, erase_w = int(random.uniform(0.05, 0.25) * H), int(random.uniform(0.05, 0.25) * W)
             erase_x, erase_y = random.randint(0, W - erase_w), random.randint(0, H - erase_h)
             img[erase_y:erase_y+erase_h, erase_x:erase_x+erase_w] = np.random.uniform(-0.2, 0.2)
 
-        # Clip values, convert back to CHW tensor, and return
+        
         img = np.clip(img, -3.0, 3.0)
         return torch.from_numpy(img.transpose(2, 0, 1))

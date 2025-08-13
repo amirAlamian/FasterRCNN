@@ -1,4 +1,4 @@
-# training.py
+
 
 import torch
 import torch.nn as nn
@@ -75,7 +75,7 @@ def run_training_phase(model, train_loader, val_loader, epochs, learning_rate, p
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             torch.save(model.state_dict(), best_model_path)
-            print(f"  ✅ New best validation accuracy: {best_val_acc:.2f}%. Model saved.")
+            print(f"   New best validation accuracy: {best_val_acc:.2f}%. Model saved.")
             
         if optimizer.param_groups[0]['lr'] < 1e-7:
             print("  Learning rate too low, stopping training early.")
@@ -143,7 +143,7 @@ def perform_semi_supervised_learning(model):
 
 def run_complete_training_pipeline():
     
-    # Stage 1: Initial Supervised Training
+    
     print("--- Stage 1: Initial Training on Labeled Data ---")
     labeled_data = process_labeled_data_for_resnet()
     if not labeled_data:
@@ -162,17 +162,17 @@ def run_complete_training_pipeline():
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS, pin_memory=True)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE * 2, shuffle=False, num_workers=NUM_WORKERS, pin_memory=True)
 
-    # Corrected phase_name to "best" to match prediction script
+    
     model, best_acc = run_training_phase(model, train_loader, val_loader, epochs=40, learning_rate=1e-3, phase_name="best")
     print(f"\n Initial training finished with best validation accuracy: {best_acc:.2f}%")
 
-    # Stage 2: Semi-Supervised Learning
+    
     pseudo_labels = perform_semi_supervised_learning(model)
-    if not pseudo_labels or len(pseudo_labels) < 50: # Require a minimum number of pseudo-labels
+    if not pseudo_labels or len(pseudo_labels) < 50:
         print("\nInsufficient pseudo-labels generated. Training complete.")
         return
 
-    # Stage 3: Fine-tuning with Pseudo-Labels
+    
     print("\n--- Stage 2: Fine-tuning with Pseudo-Labels ---")
     combined_data = labeled_data + pseudo_labels
     random.shuffle(combined_data)
@@ -186,6 +186,6 @@ def run_complete_training_pipeline():
     train_loader_ssl = DataLoader(train_dataset_ssl, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS, pin_memory=True)
     val_loader_ssl = DataLoader(val_dataset_ssl, batch_size=BATCH_SIZE * 2, shuffle=False, num_workers=NUM_WORKERS, pin_memory=True)
     
-    # Corrected phase_name to "ssl" to match prediction script
+    
     model, best_ssl_acc = run_training_phase(model, train_loader_ssl, val_loader_ssl, epochs=20, learning_rate=5e-4, phase_name="ssl")
     print(f"\n SSL fine-tuning finished with best validation accuracy: {best_ssl_acc:.2f}%")

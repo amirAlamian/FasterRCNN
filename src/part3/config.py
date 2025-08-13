@@ -1,12 +1,9 @@
-# config.py
-
 import os
 import sys
 import torch
 import numpy as np
 import random
 
-# For reproducibility
 SEED = 42
 torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
@@ -14,7 +11,6 @@ np.random.seed(SEED)
 random.seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = True  
-
 
 BATCH_SIZE = 64  
 NUM_WORKERS = 2 
@@ -27,7 +23,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def get_project_root():
-    """Dynamically finds the project's root directory."""
+    
     current_dir = os.path.abspath(os.path.dirname(__file__))
     
     for _ in range(4):
@@ -61,7 +57,7 @@ NUM_CLASSES = len(CHARACTERS)
 
 
 def print_config():
-    """Prints a summary of the current configuration."""
+    
     print("--- Configuration ---")
     print(f"  Device: {device}")
     if torch.cuda.is_available():
@@ -72,7 +68,7 @@ def print_config():
     print("-" * 21)
 
 def verify_paths():
-    """Verifies that all essential data directories exist."""
+    
     print("Verifying essential paths...")
     required_dirs = [DATASET_ROOT, TRAIN_IMAGES, TRAIN_LABELS, VALID_IMAGES, VALID_LABELS, TEST_IMAGES]
     missing_dirs = [p for p in required_dirs if not os.path.exists(p)]

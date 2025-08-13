@@ -1,4 +1,4 @@
-# main.py
+
 
 import sys
 import os
@@ -14,7 +14,7 @@ try:
     from training import run_complete_training_pipeline
     from prediction import prediction_main, check_trained_models
 except ImportError as e:
-    print(f"❌ Critical Import Error: {e}\n. Please ensure all required files exist and you are running from the correct directory.")
+    print(f" Critical Import Error: {e}\n. Please ensure all required files exist and you are running from the correct directory.")
     sys.exit(1)
 
 def print_header():
@@ -52,17 +52,17 @@ def main():
     
     if mode == "--train":
         print("\n" + "="*50)
-        print("🚀 STARTING FULL TRAINING PIPELINE")
+        print(" STARTING FULL TRAINING PIPELINE")
         print("="*50)
         
         run_complete_training_pipeline()
-        print("\n✅ Training complete. Proceeding to inference...")
+        print("\n Training complete. Proceeding to inference...")
         prediction_main()
     elif mode == "--inference":
         if not models_exist:
-            print("❌ Error: --inference mode selected, but no models found.")
+            print(" Error: --inference mode selected, but no models found.")
             sys.exit(1)
-        print("\n✅ Models found. Proceeding to inference...")
+        print("\n Models found. Proceeding to inference...")
         prediction_main()
     else:
         print(f"Unknown argument: {mode}. Use --train or --inference.")

@@ -243,7 +243,7 @@ class ExpressionDataset(Dataset):
         img = Image.open(img_path).convert("RGB")
         boxes = []
         labels = []
-        image_id = int(img_name.replace(".png", ""))
+        image_id = torch.tensor(int(img_name.replace(".png", "")))
         area = 0
         iscrowd = []
         if os.path.exists(ann_path):

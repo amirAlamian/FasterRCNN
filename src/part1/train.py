@@ -29,7 +29,7 @@ def evaluate_detections(preds, targets):
     }
 
 
-def training(model, train_loader, valid_loader, num_epochs=10, device="cuda", save_dist="../results/best_model.pth"):
+def training(model, train_loader, valid_loader, num_epochs=10, device="cuda", save_dist="../../results/part1/best_model.pth"):
     model = model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -64,7 +64,7 @@ def training(model, train_loader, valid_loader, num_epochs=10, device="cuda", sa
             for images, targets in pbar2:
                 images = [img.to(device) for img in images]
                 targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-                outputs = model(images, None, targets[0]['scale'])
+                outputs = model(images)
                 val_detections.extend(outputs)
                 val_targets.extend(targets)
 

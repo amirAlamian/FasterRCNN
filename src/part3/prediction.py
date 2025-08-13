@@ -1,5 +1,3 @@
-# prediction.py
-
 import torch
 import torch.nn.functional as F
 import cv2
@@ -63,19 +61,19 @@ def post_process_expression(expr: str) -> str:
 def load_trained_model(model_path):
     
     if not os.path.exists(model_path):
-        print(f"❌ Error: Model file not found at {model_path}")
+        print(f" Error: Model file not found at {model_path}")
         return None
     
-    print(f"🔍 Loading model from: {os.path.basename(model_path)}")
+    print(f" Loading model from: {os.path.basename(model_path)}")
     model = ResNet18Classifier(num_classes=NUM_CLASSES).to(device)
     
     try:
         model.load_state_dict(torch.load(model_path, map_location=device))
         model.eval()
-        print("✅ Model loaded successfully!")
+        print(" Model loaded successfully!")
         return model
     except Exception as e:
-        print(f"❌ Error loading model state_dict: {e}")
+        print(f" Error loading model state_dict: {e}")
         return None
 
 def check_trained_models():
@@ -88,7 +86,7 @@ def check_trained_models():
     elif os.path.exists(base_path):
         return load_trained_model(base_path), "resnet18_best.pth"
     else:
-        print("❌ No trained models found in the results directory.")
+        print(" No trained models found in the results directory.")
         return None, None
 
 def predict_expression_from_image(model, image, bboxes):
@@ -123,7 +121,7 @@ def predict_expression_from_image(model, image, bboxes):
 def test_on_official_validation(model):
     
     print("\n" + "="*50)
-    print("🔬 RUNNING OFFICIAL VALIDATION")
+    print(" RUNNING OFFICIAL VALIDATION")
     print("="*50)
     results = []
     
@@ -171,7 +169,7 @@ def test_on_official_validation(model):
     print(f"  > Detailed results saved to: {val_path}")
 
 def generate_test_submission(model):
-    """Generates the final 'output.csv' for submission using test data (500-699)."""
+    
     print("\n" + "="*50)
     print(" GENERATING TEST SUBMISSION")
     print("="*50)
@@ -208,7 +206,7 @@ def generate_test_submission(model):
     submission_df.to_csv(output_path, index=False)
     
     print("\n--- Submission Generation Complete ---")
-    print(f"  ✅ Submission file created at: {output_path}")
+    print(f"  Submission file created at: {output_path}")
 
 def prediction_main():
     

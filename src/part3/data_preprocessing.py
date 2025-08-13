@@ -1,12 +1,9 @@
-# data_preprocessing.py
-
 import cv2
 import numpy as np
 import json
 import os
 import sys
 from collections import Counter
-
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(current_dir))
@@ -36,7 +33,6 @@ def validate_bbox_ultra_robust(bbox, image_shape):
         
         if w < 3 or h < 3: return None
 
-        
         img_h, img_w = image_shape[:2]
         x = max(0, x)
         y = max(0, y)
@@ -55,29 +51,23 @@ def preprocess_for_resnet(image):
         return None
     
     try:
-        # 1. Convert to grayscale
+        
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if len(image.shape) == 3 else image
 
-        # 2. Enhance Contrast (CLAHE)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
         enhanced = clahe.apply(gray)
         
-        # 3. Binarize using adaptive thresholding
         _, thresh = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         
-        # 4. Resize to target dimensions (224x224)
         resized = cv2.resize(thresh, (224, 224), interpolation=cv2.INTER_AREA)
         
-        # 5. Convert back to 3-channel RGB for ResNet
         rgb = cv2.cvtColor(resized, cv2.COLOR_GRAY2RGB)
         
-        # 6. Normalize image tensor
         normalized = rgb.astype(np.float32) / 255.0
         mean = np.array([0.485, 0.456, 0.406])
         std = np.array([0.229, 0.224, 0.225])
         normalized = (normalized - mean) / std
         
-        # 7. Transpose to CHW format (Channels, Height, Width)
         return normalized.transpose(2, 0, 1).astype(np.float32)
         
     except cv2.error as e:
@@ -89,10 +79,10 @@ def preprocess_for_resnet(image):
 
 def process_labeled_data_for_resnet():
     
-    print("🔍 Processing initial labeled data (images 0-7)...")
+    print(" Processing initial labeled data (images 0-7)...")
     labeled_samples = []
 
-    for img_id in range(8): # Only images 0-7 are guaranteed to be labeled
+    for img_id in range(8): 
         img_path = os.path.join(TRAIN_IMAGES, f"{img_id}.png")
         json_path = os.path.join(TRAIN_LABELS, f"{img_id}.json")
 
