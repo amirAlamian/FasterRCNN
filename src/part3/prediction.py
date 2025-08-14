@@ -174,7 +174,7 @@ def generate_test_submission(model):
     print(" GENERATING TEST SUBMISSION")
     print("="*50)
     
-    part1_output_path = os.path.join(RESULTS_ROOT, "..", "part1", "part1_output.csv")
+    part1_output_path = os.path.join(RESULTS_ROOT, "..", "part1", "output.csv") #agar moshkel ijad shod part1_output.csv bezar
     if not os.path.exists(part1_output_path):
         print(f" Error: Part 1 bbox output not found at '{part1_output_path}'")
         return
@@ -229,4 +229,5 @@ def prediction_main():
         test_on_official_validation(model)
         generate_test_submission(model)
     else:
+
         print("Invalid choice. Exiting.")
