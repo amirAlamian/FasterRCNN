@@ -1,0 +1,4 @@
+Silhouette: 0.1569
+Davies-Bouldin: 2.2358
+Calinski-Harabasz: 181.56
+K: 14
