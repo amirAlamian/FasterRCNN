@@ -3,6 +3,7 @@ import cv2, shutil
 from typing import List
 from .config import RESULTS_DIR, CLUSTERS_DIR, PLOTS_DIR
 
+
 def ensure_dirs():
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     CLUSTERS_DIR.mkdir(parents=True, exist_ok=True)

@@ -1,22 +1,21 @@
-# src/part2/samples_viz_grid_en.py
 import sys, json
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import cv2
 import matplotlib
-matplotlib.use("Agg")  # safe for headless
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
 from sklearn.metrics import pairwise_distances
 import joblib
 
-# --- Import config whether run as module or as a script ---
+
 try:
     from .config import RESULTS_DIR, PLOTS_DIR
 except Exception:
     here = Path(__file__).resolve()
-    sys.path.append(str(here.parents[1]))   # add .../src
+    sys.path.append(str(here.parents[1]))
     from part2.config import RESULTS_DIR, PLOTS_DIR
 
 def _load_artifacts(res_dir: Path):
@@ -68,7 +67,6 @@ def make_cluster_grids(k_top=6, k_far=6, figsize=(16, 6)):
     plots_dir = PLOTS_DIR
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load clustering CSV
     csv_refined = res_dir / "features_refined.csv"
     csv_basic   = res_dir / "features.csv"
     if csv_refined.exists():
@@ -81,7 +79,6 @@ def make_cluster_grids(k_top=6, k_far=6, figsize=(16, 6)):
     if "cluster" not in df.columns:
         raise RuntimeError("Missing 'cluster' column. Run clustering first.")
 
-    # Load artifacts to rebuild the exact feature space
     shp_sc, lbp_sc, hog_sc, hog_pca, info = _load_artifacts(res_dir)
     for fam in ["shape_cols", "lbp_cols", "hog_cols"]:
         if info.get(fam):

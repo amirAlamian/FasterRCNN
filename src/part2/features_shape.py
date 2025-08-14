@@ -47,6 +47,7 @@ def extract_shape_features(gray):
     v_mass_ratio = top / (bottom + 1e-6)
     h_mass_ratio = left / (right + 1e-6)
 
+
     return {
         "area": area, "perimeter": peri, "bbox_w": float(w), "bbox_h": float(h),
         "aspect_ratio": aspect_ratio, "edge_count": edge_count,

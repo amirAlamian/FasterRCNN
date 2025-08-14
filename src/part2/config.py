@@ -2,7 +2,6 @@ from pathlib import Path
 import random
 import numpy as np
 
-
 ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT / "dataset" / "train" / "normalized_images"
 RESULTS_DIR = ROOT / "results" / "part2"

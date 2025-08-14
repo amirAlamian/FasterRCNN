@@ -1,17 +1,3 @@
-"""
-Inference on RAW labeled images:
-- Loads artifacts (scalers, PCA, KMeans) trained on TRAIN normalized chars.
-- Crops each bbox from RAW image, applies a prep mode (mnist/resize/none),
-  builds features, predicts cluster, and draws it on the RAW image.
-- Additionally saves a 28x28 visualization crop with WHITE background & BLACK text.
-
-USAGE:
-  python -m part2.infer_on_raw --split test --image-id 0 --prep mnist
-  # or:
-  python -m part2.infer_on_raw --image-path "dataset/test/images/0.png" --prep mnist
-  # if you saved artifacts in a suffixed dir (results/part2/artifacts_mnist):
-  python -m part2.infer_on_raw --split test --image-id 0 --prep mnist --art-suffix mnist
-"""
 import argparse, json
 from pathlib import Path
 import numpy as np
@@ -25,14 +11,13 @@ from .features_shape import extract_shape_features
 from .features_lbp import extract_lbp_features
 from .features_hog import extract_hog_features
 
-# از همان توابع preprocess برای سازگاری با آموزش
 from .preprocess import (
     remove_horizontal_lines,
     clean_character_image,
     normalize_char_with_antialiasing
 )
 
-# ------------------ artifact paths ------------------
+
 def _artifact_dir(art_suffix: str | None):
     if art_suffix:
         d = RESULTS_DIR / f"artifacts_{art_suffix}"
@@ -50,53 +35,38 @@ def _load_artifacts(art_dir: Path):
         info = json.load(f)
     return shp, lbp, hog, pca, km, info
 
-# ------------------ prep modes ------------------
+
 def _prep_char(crop_bgr, mode="mnist"):
-    """
-    Returns a grayscale 28x28 ready for feature extraction (same distribution as training).
-    - mnist : crop -> remove line -> clean -> normalize to 28x28 (binary-inv + padding; as in training)
-    - resize: just resize to 28x28 (no binarization/padding)
-    - none  : same as resize (kept for explicitness)
-    """
     if crop_bgr is None or crop_bgr.size == 0:
         return np.zeros((28, 28), dtype=np.uint8) + 255
 
     if mode == "mnist":
         no_line = remove_horizontal_lines(crop_bgr)
         cleaned = clean_character_image(no_line)
-        norm28  = normalize_char_with_antialiasing(cleaned)   # this returns a grayscale 28x28 (char = white, bg = black)
+        norm28  = normalize_char_with_antialiasing(cleaned)
         if norm28.ndim == 3:
             norm28 = cv2.cvtColor(norm28, cv2.COLOR_BGR2GRAY)
         return norm28
 
-    # resize / none
     if crop_bgr.ndim == 3:
         gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
     else:
         gray = crop_bgr
     return cv2.resize(gray, (28, 28), interpolation=cv2.INTER_AREA)
 
-# ------------------ viz helpers ------------------
 def _to_white_bg_black_text(img28: np.ndarray) -> np.ndarray:
-    """
-    Make a visualization-friendly 28x28 with WHITE background & BLACK text.
-    Does NOT affect the features/prediction pipeline; only for saving previews.
-    """
+
     if img28.ndim == 3:
         img28 = cv2.cvtColor(img28, cv2.COLOR_BGR2GRAY)
 
-    # heuristic: if the image is overall dark, invert
-    # (training mnist-like has char white on black => mean is low; invert for viz)
     vis = img28.copy()
-    if np.mean(vis) < 127:  # mostly dark background
+    if np.mean(vis) < 127:  
         vis = cv2.bitwise_not(vis)
 
-    # ensure background goes white-ish and strokes black-ish (contrast stretch)
-    # optional gentle normalization
     vis = cv2.normalize(vis, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
     return vis
 
-# ------------------ vectorization ------------------
+
 def _vectorize_28(gray28, info, shp_scaler, lbp_scaler, hog_scaler, hog_pca):
     feats = {}
     feats.update(extract_shape_features(gray28))
@@ -121,7 +91,6 @@ def _vectorize_28(gray28, info, shp_scaler, lbp_scaler, hog_scaler, hog_pca):
     X = normalize(X, norm="l2", axis=1)
     return X
 
-# ------------------ core ------------------
 def run_infer(split="test", image_id=None, image_path=None, prep="mnist",
               art_suffix: str | None = None, save_vis=True):
     """
@@ -134,7 +103,6 @@ def run_infer(split="test", image_id=None, image_path=None, prep="mnist",
     art_dir = _artifact_dir(art_suffix)
     shp_scaler, lbp_scaler, hog_scaler, hog_pca, kmeans, info = _load_artifacts(art_dir)
 
-    # resolve paths
     if image_path:
         img_path = Path(image_path)
         lab_path = img_path.parent.parent / "labels" / (img_path.stem + ".json")
@@ -155,7 +123,6 @@ def run_infer(split="test", image_id=None, image_path=None, prep="mnist",
     out_dir.mkdir(parents=True, exist_ok=True)
     crop_dir.mkdir(parents=True, exist_ok=True)
 
-    # collect boxes sorted by x
     boxes = []
     for ann in meta["annotations"]:
         bb = ann["boundingBox"]
@@ -169,27 +136,22 @@ def run_infer(split="test", image_id=None, image_path=None, prep="mnist",
         if crop.size == 0:
             continue
 
-        # 1) prep for features/prediction (training-compatible)
         gray28 = _prep_char(crop, mode=prep)
         if gray28.ndim == 3:
             gray28 = cv2.cvtColor(gray28, cv2.COLOR_BGR2GRAY)
 
-        # 2) build features & predict cluster
         X = _vectorize_28(gray28, info, shp_scaler, lbp_scaler, hog_scaler, hog_pca)
         c = int(kmeans.predict(X)[0])
         preds.append({"idx": i, "bbox": [x1, y1, x2, y2], "cluster": c})
 
-        # 3) draw on RAW
         if save_vis:
             cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 255), 2)
             cv2.putText(image, f"C{c}", (x1, max(0, y1 - 6)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (40, 180, 60), 2, cv2.LINE_AA)
 
-            # 4) save per-char visualization with WHITE bg & BLACK text
             vis28 = _to_white_bg_black_text(gray28)
             cv2.imwrite(str(crop_dir / f"{img_path.stem}_{i:02d}.png"), vis28)
 
-    # save outputs
     out_img  = out_dir / f"{img_path.stem}_pred.png"
     out_json = out_dir / f"{img_path.stem}_pred.json"
     if save_vis:
@@ -201,7 +163,7 @@ def run_infer(split="test", image_id=None, image_path=None, prep="mnist",
     print(f"[infer] crops -> {crop_dir}")
     return str(out_img), str(out_json)
 
-# ------------------ cli ------------------
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser("Infer clusters on RAW image (prep-consistent with TRAIN).")
     ap.add_argument("--split", default="test", choices=["train", "val", "test"])

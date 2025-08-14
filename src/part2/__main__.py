@@ -1,5 +1,3 @@
-# part2/__main__.py
-# -*- coding: utf-8 -*-
 import argparse
 import sys
 import subprocess
@@ -10,7 +8,6 @@ from .config import ROOT
 from .pipeline_part2 import run as run_part2
 from .infer_on_raw import run_infer
 
-# ---------------------- helpers ----------------------
 def run_preprocess(python_bin="python"):
     script = Path(__file__).resolve().parent / "preprocess.py"
     if not script.exists():
@@ -22,7 +19,6 @@ def run_preprocess(python_bin="python"):
     print(" preprocessing completed.")
 
 def _list_ids_in_split(split_dir: Path):
-    """بر اساس فایل‌های labels، لیست IDها را برمی‌گرداند."""
     labels_dir = split_dir / "labels"
     if not labels_dir.exists():
         return []
@@ -32,25 +28,21 @@ def _list_ids_in_split(split_dir: Path):
             try:
                 ids.append(int(p.stem))
             except ValueError:
-                # اگر اسم فایل عددی نبود، از روی images هم می‌توانستیم بخوانیم
                 pass
     return ids
 
-# ---------------------- main ----------------------
+
 def main():
     parser = argparse.ArgumentParser(description="Part-2 pipeline launcher (train + optional raw inference)")
 
-    # عمومی
     parser.add_argument("--python-bin", type=str, default="python", help="python executable to run preprocess.py")
     parser.add_argument("--skip-preprocess", action="store_true", help="skip running preprocess.py")
 
-    # استخراج ویژگی/کلاسترینگ
     parser.add_argument("--features", type=str, default="shape,lbp,hog", help="comma-separated: shape,lbp,hog")
     parser.add_argument("--hog-pca", type=int, default=48, help="HOG PCA components")
     parser.add_argument("--k-min", type=int, default=12, help="min K for KMeans selection")
     parser.add_argument("--k-max", type=int, default=24, help="max K for KMeans selection")
 
-    # اینفرانس روی خام
     parser.add_argument("--infer", action="store_true", help="run inference on RAW images after training")
     parser.add_argument("--infer-split", type=str, default="test", choices=["train", "val", "test"],
                         help="which split to infer on (RAW images)")
@@ -64,21 +56,17 @@ def main():
 
     args = parser.parse_args()
 
-    # 0) پیش‌پردازش
     if not args.skip_preprocess:
         run_preprocess(python_bin=args.python_bin)
     else:
         print("  skipping preprocessing.")
 
-    # 1) اطمینان از مسیر دیتای نرمال‌شدهٔ TRAIN
     normalized_dir = (ROOT / "dataset" / "train" / "normalized_images").resolve()
     if not normalized_dir.exists():
         raise FileNotFoundError(f"normalized_images not found at: {normalized_dir}")
 
-    # override config.DATA_DIR تا بخش ۲ از 28×28 نرمال‌شده بخواند
     cfg.DATA_DIR = normalized_dir
 
-    # 2) اجرای کلاسترینگ بهبودیافته
     feature_sets = tuple(s.strip() for s in args.features.split(",") if s.strip())
     print(f" clustering from: {cfg.DATA_DIR}")
     print(f" features: {feature_sets}")
@@ -96,7 +84,6 @@ def main():
     print(" PCA plot:", Path(report["pca_plot"]).name)
     print(" metrics:", Path(report["metrics"]).name)
 
-    # 3) اینفرانس روی عکس خام (اختیاری)
     if args.infer:
         split = args.infer_split
         split_dir = (ROOT / f"/dataset/{split}").resolve()

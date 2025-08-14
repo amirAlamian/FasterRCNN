@@ -16,13 +16,13 @@ from .config import (
     set_seed, DATA_DIR, RESULTS_DIR, PLOTS_DIR, CLUSTERS_DIR,
     SEED, N_CLUSTERS
 )
+
 from .io_utils import list_images, read_gray, ensure_dirs, copy_to
 from .features_shape import extract_shape_features
 from .features_lbp import extract_lbp_features
 from .features_hog import extract_hog_features
 
 
-# ------------------------------- Utilities -------------------------------
 
 def _collect_features_from_dir(data_dir: Path, feature_sets=("shape", "lbp", "hog")) -> pd.DataFrame:
     """Read 28x28 gray images from data_dir and build a features DataFrame."""
@@ -58,7 +58,6 @@ def _separate_families(df: pd.DataFrame):
     return df, shape_cols, lbp_cols, hog_cols
 
 
-# -------------------------- Fitting transforms ---------------------------
 
 def _fit_transforms_on_train(df: pd.DataFrame,
                              shape_cols, lbp_cols, hog_cols,
@@ -90,7 +89,6 @@ def _fit_transforms_on_train(df: pd.DataFrame,
     return shape_scaler, lbp_scaler, hog_scaler, hog_pca, X
 
 
-# --------------------------- K selection & plots -------------------------
 
 def _choose_k_by_elbow_silhouette(X, k_min=12, k_max=24, save_plots=True):
     inertias, sils, ks = [], [], list(range(k_min, k_max + 1))
@@ -107,7 +105,6 @@ def _choose_k_by_elbow_silhouette(X, k_min=12, k_max=24, save_plots=True):
                 best_s, best_k = sil, k
         sils.append(sil)
 
-    # approximate elbow by curvature on inertia
     diffs = np.diff(inertias)
     curv = np.diff(diffs) * -1.0
     k_elbow = ks[2 + int(np.argmax(curv))] if len(curv) else ks[0]
@@ -134,13 +131,11 @@ def _choose_k_by_elbow_silhouette(X, k_min=12, k_max=24, save_plots=True):
     return best_k
 
 
-# ----------------------------- Final clustering --------------------------
 
 def _cluster_fit_and_export(X, df, image_paths, K):
     km = KMeans(n_clusters=K, random_state=SEED, n_init=20).fit(X)
     labels = km.labels_
 
-    # metrics
     if len(np.unique(labels)) > 1:
         sil = silhouette_score(X, labels)
         db = davies_bouldin_score(X, labels)
@@ -154,7 +149,6 @@ def _cluster_fit_and_export(X, df, image_paths, K):
     df_out["cluster"] = labels
     df_out.to_csv(out_csv, index=False, encoding="utf-8-sig")
 
-    # PCA(2D) scatter
     PLOTS_DIR.mkdir(parents=True, exist_ok=True)
     p2 = PCA(n_components=2, random_state=SEED).fit_transform(X)
     plt.figure(figsize=(8, 6))
@@ -165,7 +159,6 @@ def _cluster_fit_and_export(X, df, image_paths, K):
     plot_path = PLOTS_DIR / "pca_scatter_refined.png"
     plt.tight_layout(); plt.savefig(plot_path, dpi=150); plt.close()
 
-    # copy images for qualitative review
     uniq = np.unique(labels)
     for c in uniq:
         (CLUSTERS_DIR / f"cluster_{c}").mkdir(parents=True, exist_ok=True)
@@ -173,7 +166,6 @@ def _cluster_fit_and_export(X, df, image_paths, K):
         dst = CLUSTERS_DIR / f"cluster_{lab}" / Path(img_path).name
         copy_to(Path(img_path), dst)
 
-    # metrics file
     with open(RESULTS_DIR / "metrics_refined.txt", "w", encoding="utf-8") as f:
         f.write(f"Silhouette: {sil:.4f}\nDavies-Bouldin: {db:.4f}\nCalinski-Harabasz: {ch:.2f}\nK: {K}\n")
 
@@ -192,7 +184,6 @@ def _cluster_fit_and_export(X, df, image_paths, K):
     }
 
 
-# ----------------------------- Save artifacts ----------------------------
 
 def _save_artifacts(shape_scaler, lbp_scaler, hog_scaler, hog_pca,
                     shape_cols, lbp_cols, hog_cols, kmeans):
@@ -216,7 +207,6 @@ def _save_artifacts(shape_scaler, lbp_scaler, hog_scaler, hog_pca,
     print(f"[save] Artifacts saved into: {RESULTS_DIR}")
 
 
-# -------------------------------- Orchestrator ---------------------------
 
 def run(feature_sets=("shape", "lbp", "hog"),
         hog_pca_components=48,
@@ -232,33 +222,29 @@ def run(feature_sets=("shape", "lbp", "hog"),
     set_seed()
     ensure_dirs()
 
-    train_dir = DATA_DIR  # ../dataset/train/normalized_images
+    train_dir = DATA_DIR
     if not train_dir.exists():
         raise FileNotFoundError(f"normalized_images (train) not found at: {train_dir}")
 
-    # 1) Build features from TRAIN normalized chars
+
     df = _collect_features_from_dir(train_dir, feature_sets=feature_sets)
     df, shape_cols, lbp_cols, hog_cols = _separate_families(df)
 
-    # 2) Fit transforms on TRAIN
+
     shape_scaler, lbp_scaler, hog_scaler, hog_pca, X = _fit_transforms_on_train(
         df, shape_cols, lbp_cols, hog_cols, hog_pca_components=hog_pca_components
     )
 
-    # 3) Choose K
     if isinstance(N_CLUSTERS, int) and N_CLUSTERS > 1:
         best_k = int(N_CLUSTERS)  # قفل روی K مشخص در config.py
     else:
         best_k = _choose_k_by_elbow_silhouette(X, k_min=k_min, k_max=k_max, save_plots=True)
 
-    # 4) Final clustering + exports
     report = _cluster_fit_and_export(X, df, df["path"].tolist(), best_k)
 
-    # 5) Save artifacts for inference
     _save_artifacts(shape_scaler, lbp_scaler, hog_scaler, hog_pca,
                     shape_cols, lbp_cols, hog_cols, report["kmeans"])
 
-    # compact return (سازگار با __main__.py)
     return {
         "csv": report["csv"],
         "pca_plot": report["pca_plot"],
@@ -268,8 +254,6 @@ def run(feature_sets=("shape", "lbp", "hog"),
     }
 
 
-# ------------------------------- CLI (اختیاری) ---------------------------
-# لانچر فعلی‌ات از این بخش استفاده نمی‌کند، ولی برای اجرا مستقیم مفید است.
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Part-2 pipeline (TRAIN only, refined)")

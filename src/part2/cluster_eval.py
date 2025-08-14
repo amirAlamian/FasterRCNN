@@ -7,7 +7,6 @@ from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_har
 from .config import RESULTS_DIR, CLUSTERS_DIR, PLOTS_DIR, N_CLUSTERS, SEED
 from .io_utils import copy_to
 
-
 def run_clustering(df: pd.DataFrame, image_paths):
     feature_cols = [c for c in df.columns if c not in ["image", "path"]]
     df[feature_cols] = df[feature_cols].replace([np.inf, -np.inf], np.nan)
