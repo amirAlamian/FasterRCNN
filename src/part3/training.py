@@ -30,8 +30,8 @@ def run_training_phase(model, train_loader, val_loader, epochs, learning_rate, p
     
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=5, factor=0.5, verbose=True)
-    
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=5, factor=0.5)
+    # inja az "scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=5, factor=0.5, verbose=True)" ham mishe estefadeh kard
     best_val_acc = 0.0
     best_model_path = os.path.join(RESULTS_ROOT, f'resnet18_{phase_name.lower()}.pth')
 
@@ -188,4 +188,5 @@ def run_complete_training_pipeline():
     
     
     model, best_ssl_acc = run_training_phase(model, train_loader_ssl, val_loader_ssl, epochs=20, learning_rate=5e-4, phase_name="ssl")
+
     print(f"\n SSL fine-tuning finished with best validation accuracy: {best_ssl_acc:.2f}%")
