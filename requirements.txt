@@ -1,0 +1,14 @@
+
+joblib
+scikit-image
+
+torch
+torchvision
+numpy
+pandas
+opencv-python
+matplotlib
+seaborn
+scikit-learn
+tqdm
+python-Levenshtein
